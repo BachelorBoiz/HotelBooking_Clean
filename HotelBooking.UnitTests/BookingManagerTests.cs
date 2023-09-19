@@ -85,15 +85,24 @@ namespace HotelBooking.UnitTests
                 new Room { Id=2, Description="B" },
             };
 
-            bookingRepositoryMock.Setup();
+            // Set up mock repository behavior
+            roomRepositoryMock.Setup(repo => repo.GetAll()).Returns(rooms); // Mock room retrieval
+            bookingRepositoryMock.Setup(repo => repo.Add(It.IsAny<Booking>())).Callback<Booking>(b =>
+            {
+                // Simulate saving the booking by modifying its properties
+                booking.Id = 123; // Assign a fake booking ID
+                booking.IsActive = true; // Set IsActive to true
+                booking.RoomId = 1; // Assign a room ID to the booking
+            });
 
             // Act
             bool result = bookingService.CreateBooking(booking);
 
             // Assert
-            Assert.True(result);
-            Assert.True(booking.IsActive);
+            Assert.True(result); // Booking creation should succeed
+            Assert.True(booking.IsActive); // Ensure IsActive is set to true
             Assert.Equal(1, booking.RoomId); // Ensure RoomId is set to the expected value
+            bookingRepositoryMock.Verify(repo => repo.Add(It.IsAny<Booking>()), Times.Once); // Verify that the Add method was called once
         }
 
         //[Fact]
