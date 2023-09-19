@@ -104,7 +104,6 @@ namespace HotelBooking.UnitTests
             Assert.Equal(1, booking.RoomId); // Ensure RoomId is set to the expected value
             bookingRepositoryMock.Verify(repo => repo.Add(It.IsAny<Booking>()), Times.Once); // Verify that the Add method was called once
         }
-
         //[Fact]
         //public void CreateBooking_WhenRoomNotAvailable_ShouldReturnFalse()
         //{
