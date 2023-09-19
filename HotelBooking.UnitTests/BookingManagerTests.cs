@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using HotelBooking.Core;
 using HotelBooking.UnitTests.Fakes;
 using Xunit;
 using System.Linq;
+using Moq;
 
 
 namespace HotelBooking.UnitTests
@@ -64,6 +66,55 @@ namespace HotelBooking.UnitTests
 
             Assert.Empty(bookingForReturnedRoomId);
         }
+        
+        [Fact]
+        public void CreateBooking_WhenRoomAvailable_ShouldReturnTrue()
+        {
+            // Arrange
+            var bookingRepositoryMock = new Mock<IRepository<Booking>>();
+            var roomRepositoryMock = new Mock<IRepository<Room>>();
+            var bookingService = new BookingManager(bookingRepositoryMock.Object,roomRepositoryMock.Object); // Inject the mock repository
+            var booking = new Booking
+            {
+                StartDate = DateTime.Now.AddDays(1),
+                EndDate = DateTime.Now.AddDays(3)
+            };
+            var rooms = new List<Room>
+            {
+                new Room { Id=1, Description="A" },
+                new Room { Id=2, Description="B" },
+            };
 
+            bookingRepositoryMock.Setup();
+
+            // Act
+            bool result = bookingService.CreateBooking(booking);
+
+            // Assert
+            Assert.True(result);
+            Assert.True(booking.IsActive);
+            Assert.Equal(1, booking.RoomId); // Ensure RoomId is set to the expected value
+        }
+
+        //[Fact]
+        //public void CreateBooking_WhenRoomNotAvailable_ShouldReturnFalse()
+        //{
+        //    // Arrange
+        //    var bookingRepositoryMock = new Mock<IBookingManager>();
+        //    var bookingService = new BookingManager(bookingRepositoryMock.Object); // Inject the mock repository
+        //    var booking = new Booking
+        //    {
+        //        StartDate = DateTime.Now.AddDays(1),
+        //        EndDate = DateTime.Now.AddDays(3)
+        //    };
+        //    bookingRepositoryMock.Setup(repo => repo.FindAvailableRoom(booking.StartDate, booking.EndDate))
+        //        .Returns(-1); // Assuming no room is available
+        //    // Act
+        //    bool result = bookingService.CreateBooking(booking);
+        //    // Assert
+        //    Assert.False(result);
+        //    Assert.False(booking.IsActive); // Booking should not be active when room is not available
+        //    Assert.Equal(-1, booking.RoomId); // RoomId should remain unchanged
+        //}
     }
 }
