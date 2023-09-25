@@ -33,6 +33,7 @@ namespace HotelBooking.UnitTests
 
             // Assert
             Assert.Throws<ArgumentException>(act);
+
         }
 
         [Fact]
