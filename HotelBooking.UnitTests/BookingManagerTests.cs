@@ -33,7 +33,6 @@ namespace HotelBooking.UnitTests
 
             // Assert
             Assert.Throws<ArgumentException>(act);
-
         }
 
         [Fact]
@@ -105,25 +104,45 @@ namespace HotelBooking.UnitTests
             Assert.Equal(1, booking.RoomId); // Ensure RoomId is set to the expected value
             bookingRepositoryMock.Verify(repo => repo.Add(It.IsAny<Booking>()), Times.Once); // Verify that the Add method was called once
         }
-        //[Fact]
-        //public void CreateBooking_WhenRoomNotAvailable_ShouldReturnFalse()
-        //{
-        //    // Arrange
-        //    var bookingRepositoryMock = new Mock<IBookingManager>();
-        //    var bookingService = new BookingManager(bookingRepositoryMock.Object); // Inject the mock repository
-        //    var booking = new Booking
-        //    {
-        //        StartDate = DateTime.Now.AddDays(1),
-        //        EndDate = DateTime.Now.AddDays(3)
-        //    };
-        //    bookingRepositoryMock.Setup(repo => repo.FindAvailableRoom(booking.StartDate, booking.EndDate))
-        //        .Returns(-1); // Assuming no room is available
-        //    // Act
-        //    bool result = bookingService.CreateBooking(booking);
-        //    // Assert
-        //    Assert.False(result);
-        //    Assert.False(booking.IsActive); // Booking should not be active when room is not available
-        //    Assert.Equal(-1, booking.RoomId); // RoomId should remain unchanged
-        //}
+
+        [Fact]
+        public void CreateBooking_WhenRoomNotAvailable_ShouldReturnFalse()
+        {
+            // Arrange
+            var bookingRepositoryMock = new Mock<IRepository<Booking>>();
+            var roomRepositoryMock = new Mock<IRepository<Room>>();
+            var bookingManager = new BookingManager(bookingRepositoryMock.Object, roomRepositoryMock.Object);
+
+            var booking = new Booking
+            {
+                StartDate = DateTime.Now.AddDays(2),
+                EndDate = DateTime.Now.AddDays(4)
+            };
+
+            var rooms = new List<Room>
+            {
+                new Room { Id = 1, Description = "A" }
+            };
+
+            var existingBooking = new Booking
+            {
+                StartDate = DateTime.Now.AddDays(1),
+                EndDate = DateTime.Now.AddDays(3),
+                IsActive = true,
+                RoomId = 1
+            };
+
+            bookingRepositoryMock.Setup(repo => repo.GetAll()).Returns(new List<Booking> { existingBooking });
+            roomRepositoryMock.Setup(repo => repo.GetAll()).Returns(rooms);
+
+            // Act
+            bool result = bookingManager.CreateBooking(booking);
+
+            // Assert
+            Assert.False(result);
+            Assert.False(booking.IsActive);
+            Assert.Equal(-1, booking.RoomId);
+            bookingRepositoryMock.Verify(repo => repo.Add(booking), Times.Never);
+        }
     }
 }

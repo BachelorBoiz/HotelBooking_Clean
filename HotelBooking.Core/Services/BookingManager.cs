@@ -29,6 +29,8 @@ namespace HotelBooking.Core
             }
             else
             {
+                booking.IsActive = false;
+                booking.RoomId = -1;
                 return false;
             }
         }
