@@ -144,5 +144,43 @@ namespace HotelBooking.UnitTests
             Assert.Equal(-1, booking.RoomId);
             bookingRepositoryMock.Verify(repo => repo.Add(booking), Times.Never);
         }
+
+        [Fact]
+        public void GetFullyOccupiedDates_ReturnsCorrectDates()
+        {
+            // Arrange
+            var startDate = new DateTime(2023, 10, 1);
+            var endDate = new DateTime(2023, 10, 3);
+
+            // Mock the IRepository<Booking> and IRepository<Room>
+            var bookingRepositoryMock = new Mock<IRepository<Booking>>();
+            var roomRepositoryMock = new Mock<IRepository<Room>>();
+
+            // Define some sample data for the mock repositories
+            var bookings = new List<Booking>
+            {
+                new Booking { IsActive = true, StartDate = startDate, EndDate = endDate }, // Booking that spans the entire period
+                new Booking { IsActive = true, StartDate = startDate, EndDate = endDate }, // Another booking that spans the entire period
+            };
+
+            var rooms = new List<Room>
+            {
+                new Room(),
+                new Room(),
+            };
+
+            // Set up the mock repository methods
+            bookingRepositoryMock.Setup(repo => repo.GetAll()).Returns(bookings.AsQueryable());
+            roomRepositoryMock.Setup(repo => repo.GetAll()).Returns(rooms.AsQueryable());
+
+            var bookingManager = new BookingManager(bookingRepositoryMock.Object, roomRepositoryMock.Object);
+
+            // Act
+            var fullyOccupiedDates = bookingManager.GetFullyOccupiedDates(startDate, endDate);
+
+            // Assert
+            // In this example, both bookings span the entire period, so all dates in the range should be fully occupied.
+            Assert.Equal(new List<DateTime> { startDate, startDate.AddDays(1), endDate}, fullyOccupiedDates);
+        }
     }
 }
