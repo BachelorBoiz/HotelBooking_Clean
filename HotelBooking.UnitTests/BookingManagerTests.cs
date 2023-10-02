@@ -175,6 +175,7 @@ namespace HotelBooking.UnitTests
 
             var bookingManager = new BookingManager(bookingRepositoryMock.Object, roomRepositoryMock.Object);
 
+
             // Act
             var fullyOccupiedDates = bookingManager.GetFullyOccupiedDates(startDate, endDate);
 
