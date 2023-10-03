@@ -85,6 +85,7 @@ namespace HotelBooking.UnitTests
                 new Room { Id=2, Description="B" },
             };
 
+
             // Set up mock repository behavior
             roomRepositoryMock.Setup(repo => repo.GetAll()).Returns(rooms); // Mock room retrieval
             bookingRepositoryMock.Setup(repo => repo.Add(It.IsAny<Booking>())).Callback<Booking>(b =>
