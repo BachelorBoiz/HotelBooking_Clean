@@ -1,8 +1,10 @@
 {
 	"info": {
-		"_postman_id": "2aa011d3-80de-468e-a0ac-abf1a09b1034",
+		"_postman_id": "7ed271b9-6a14-480b-8604-3abcc57d4e23",
 		"name": "HotelBooking",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18377553",
+		"_collection_link": "https://ilikeburgers.postman.co/workspace/New-Team-Workspace~de0de47d-f41e-4d6a-a51b-f20b7c72ba7f/collection/18377553-7ed271b9-6a14-480b-8604-3abcc57d4e23?action=share&source=collection_link&creator=18377553"
 	},
 	"item": [
 		{
@@ -213,6 +215,96 @@
 					"path": [
 						"rooms",
 						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Bookings",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"",
+							"pm.test(\"Response status code is 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Verify that the response is an array with at least one element\", function () {",
+							"    const responseData = pm.response.json();",
+							"    ",
+							"    pm.expect(responseData).to.be.an('array');",
+							"    pm.expect(responseData).to.have.lengthOf.at.least(1);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Verify that the 'isActive' field is a boolean value\", function () {",
+							"    const responseData = pm.response.json();",
+							"",
+							"    responseData.forEach(function (booking) {",
+							"        pm.expect(booking.isActive).to.be.a('boolean');",
+							"    });",
+							"});",
+							"",
+							"",
+							"pm.test(\"Verify response schema\", function () {",
+							"    const responseData = pm.response.json();",
+							"    ",
+							"    const schema = {",
+							"        type: \"array\",",
+							"        items: {",
+							"            type: \"object\",",
+							"            properties: {",
+							"                id: { type: \"number\" },",
+							"                startDate: { type: \"string\" },",
+							"                endDate: { type: \"string\" },",
+							"                isActive: { type: \"boolean\" },",
+							"                customerId: { type: \"number\" },",
+							"                roomId: { type: \"number\" },",
+							"                customer: {",
+							"                    type: \"object\",",
+							"                    properties: {",
+							"                        id: { type: \"number\" },",
+							"                        name: { type: \"string\" },",
+							"                        email: { type: \"string\" }",
+							"                    },",
+							"                    required: [\"id\", \"name\", \"email\"]",
+							"                },",
+							"                room: {",
+							"                    type: \"object\",",
+							"                    properties: {",
+							"                        id: { type: \"number\" },",
+							"                        description: { type: \"string\" }",
+							"                    },",
+							"                    required: [\"id\", \"description\"]",
+							"                }",
+							"            },",
+							"            required: [\"id\", \"startDate\", \"endDate\", \"isActive\", \"customerId\", \"roomId\", \"customer\", \"room\"]",
+							"        }",
+							"    };",
+							"",
+							"    pm.expect(tv4.validate(responseData, schema)).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://localhost:44360/Bookings",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "44360",
+					"path": [
+						"Bookings"
 					]
 				}
 			},
