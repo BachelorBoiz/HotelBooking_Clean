@@ -67,24 +67,14 @@ namespace HotelBooking.UnitTests
             Assert.Empty(bookingForReturnedRoomId);
         }
         
-        [Fact]
-        public void CreateBooking_WhenRoomAvailable_ShouldReturnTrue()
+        [Theory]
+        [MemberData(nameof(BookingTestDataWithAvailableRoom))]
+        public void CreateBooking_WhenRoomAvailable_ShouldReturnTrue(Booking booking, List<Room> rooms)
         {
             // Arrange
             var bookingRepositoryMock = new Mock<IRepository<Booking>>();
             var roomRepositoryMock = new Mock<IRepository<Room>>();
             var bookingService = new BookingManager(bookingRepositoryMock.Object,roomRepositoryMock.Object); // Inject the mock repository
-            var booking = new Booking
-            {
-                StartDate = DateTime.Now.AddDays(1),
-                EndDate = DateTime.Now.AddDays(3)
-            };
-            var rooms = new List<Room>
-            {
-                new Room { Id=1, Description="A" },
-                new Room { Id=2, Description="B" },
-            };
-
 
             // Set up mock repository behavior
             roomRepositoryMock.Setup(repo => repo.GetAll()).Returns(rooms); // Mock room retrieval
@@ -106,32 +96,14 @@ namespace HotelBooking.UnitTests
             bookingRepositoryMock.Verify(repo => repo.Add(It.IsAny<Booking>()), Times.Once); // Verify that the Add method was called once
         }
 
-        [Fact]
-        public void CreateBooking_WhenRoomNotAvailable_ShouldReturnFalse()
+        [Theory]
+        [MemberData(nameof(BookingTestDataWithUnavailableRoom))]
+        public void CreateBooking_WhenRoomNotAvailable_ShouldReturnFalse(Booking booking, List<Room> rooms, Booking existingBooking)
         {
             // Arrange
             var bookingRepositoryMock = new Mock<IRepository<Booking>>();
             var roomRepositoryMock = new Mock<IRepository<Room>>();
             var bookingManager = new BookingManager(bookingRepositoryMock.Object, roomRepositoryMock.Object);
-
-            var booking = new Booking
-            {
-                StartDate = DateTime.Now.AddDays(2),
-                EndDate = DateTime.Now.AddDays(4)
-            };
-
-            var rooms = new List<Room>
-            {
-                new Room { Id = 1, Description = "A" }
-            };
-
-            var existingBooking = new Booking
-            {
-                StartDate = DateTime.Now.AddDays(1),
-                EndDate = DateTime.Now.AddDays(3),
-                IsActive = true,
-                RoomId = 1
-            };
 
             bookingRepositoryMock.Setup(repo => repo.GetAll()).Returns(new List<Booking> { existingBooking });
             roomRepositoryMock.Setup(repo => repo.GetAll()).Returns(rooms);
@@ -146,43 +118,82 @@ namespace HotelBooking.UnitTests
             bookingRepositoryMock.Verify(repo => repo.Add(booking), Times.Never);
         }
 
-        [Fact]
-        public void GetFullyOccupiedDates_ReturnsCorrectDates()
+        [Theory]
+        [MemberData(nameof(FullyOccupiedDatesTestData))]
+        public void GetFullyOccupiedDates_ReturnsCorrectDates(
+                DateTime startDate, 
+                DateTime endDate, 
+                List<Booking> bookings, 
+                List<DateTime> expectedFullyOccupiedDates)
         {
             // Arrange
-            var startDate = new DateTime(2023, 10, 1);
-            var endDate = new DateTime(2023, 10, 3);
-
-            // Mock the IRepository<Booking> and IRepository<Room>
             var bookingRepositoryMock = new Mock<IRepository<Booking>>();
             var roomRepositoryMock = new Mock<IRepository<Room>>();
 
-            // Define some sample data for the mock repositories
-            var bookings = new List<Booking>
-            {
-                new Booking { IsActive = true, StartDate = startDate, EndDate = endDate }, // Booking that spans the entire period
-                new Booking { IsActive = true, StartDate = startDate, EndDate = endDate }, // Another booking that spans the entire period
-            };
-
-            var rooms = new List<Room>
-            {
-                new Room(),
-                new Room(),
-            };
-
-            // Set up the mock repository methods
             bookingRepositoryMock.Setup(repo => repo.GetAll()).Returns(bookings.AsQueryable());
-            roomRepositoryMock.Setup(repo => repo.GetAll()).Returns(rooms.AsQueryable());
+            roomRepositoryMock.Setup(repo => repo.GetAll()).Returns(new List<Room>().AsQueryable());
 
             var bookingManager = new BookingManager(bookingRepositoryMock.Object, roomRepositoryMock.Object);
-
 
             // Act
             var fullyOccupiedDates = bookingManager.GetFullyOccupiedDates(startDate, endDate);
 
             // Assert
-            // In this example, both bookings span the entire period, so all dates in the range should be fully occupied.
-            Assert.Equal(new List<DateTime> { startDate, startDate.AddDays(1), endDate}, fullyOccupiedDates);
+            Assert.Equal(expectedFullyOccupiedDates, fullyOccupiedDates);
+        }
+
+        public static IEnumerable<object[]> BookingTestDataWithUnavailableRoom()
+        {
+            yield return new object[]
+            {
+            new Booking
+            {
+                StartDate = DateTime.Now.AddDays(2),
+                EndDate = DateTime.Now.AddDays(4)
+            },
+            new List<Room>
+            {
+                new Room { Id = 1, Description = "A" }
+            },
+            new Booking
+            {
+                StartDate = DateTime.Now.AddDays(1),
+                EndDate = DateTime.Now.AddDays(3),
+                IsActive = true,
+                RoomId = 1
+            }};
+        }
+
+        public static IEnumerable<object[]> BookingTestDataWithAvailableRoom()
+        {
+            // Define your test data here
+            yield return new object[]
+            {
+            new Booking
+            {
+                StartDate = DateTime.Now.AddDays(1),
+                EndDate = DateTime.Now.AddDays(3)
+            },
+            new List<Room>
+            {
+                new Room { Id = 1, Description = "A" },
+                new Room { Id = 2, Description = "B" },
+            }};
+        }
+
+        public static IEnumerable<object[]> FullyOccupiedDatesTestData()
+        {
+            yield return new object[]
+            {
+                new DateTime(2023, 10, 1),
+                new DateTime(2023, 10, 3),
+            new List<Booking>
+            {
+                new Booking { IsActive = true, StartDate = new DateTime(2023, 10, 1), EndDate = new DateTime(2023, 10, 3) },
+                new Booking { IsActive = true, StartDate = new DateTime(2023, 10, 1), EndDate = new DateTime(2023, 10, 3) },
+            },
+            new List<DateTime> { new DateTime(2023, 10, 1), new DateTime(2023, 10, 2), new DateTime(2023, 10, 3) },
+            };
         }
     }
 }
